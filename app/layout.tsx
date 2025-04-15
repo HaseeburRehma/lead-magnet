@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata = {
-  title: "Alev Digital - Social Media Sorting Challenge",
+  title: "Social Media Marketing Test Your Skills ",
   description: "Test your knowledge of social media marketing with our interactive game",
 }
 

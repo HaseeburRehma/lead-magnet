@@ -65,11 +65,14 @@ export default function GameContainer() {
     setGameState("success")
   }, [])
 
-  const handleUserSubmit = (submittedName: string, submittedEmail: string) => {
-    setName(submittedName)
-    setEmail(submittedEmail)
+  const handleUserSubmit = (firstName: string, lastName: string, email: string, company: string) => {
+    // Here we combine first and last names for display (you can also store company if needed)
+    setName(`${firstName} ${lastName}`)
+    setEmail(email)
     startGame()
   }
+  
+  
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -78,9 +81,17 @@ export default function GameContainer() {
           <img src="/images/alev-logo.png" alt="Alev Digital" className="h-12" />
         </div>
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-2">
-          Social Media <span className="text-[#c1ff00]">Sorting Challenge</span>
+          Social Media Marketing <span className="text-[#c1ff00]">Test Your Skills</span>
         </h1>
-        <p className="text-center text-lg text-gray-300">Match our social media posts to the right categories!</p>
+        {gameState === "intro" ? (
+          <p className="text-center text-lg text-gray-300">
+            Are You Ready To Test Your Social Media Marketing Skills?
+          </p>
+        ) : (
+          <p className="text-center text-lg text-gray-300">
+            Think like a social media marketer and strategist. Your choices reflect your skills!
+          </p>
+        )}
       </header>
 
       {gameState === "intro" && <GameIntro onStart={handleUserSubmit} />}

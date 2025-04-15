@@ -79,10 +79,11 @@ export default function GameBoard({ posts, onSubmit }: GameBoardProps) {
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
-        {CATEGORIES.map((category) => (
+        {CATEGORIES.map((category, index) => (
           <CategoryDropZone
             key={category.id}
             category={category}
+            displayId={index + 1}
             post={placedPosts[category.id]}
             onDrop={(post) => handleDrop(post, category.id)}
           />
@@ -184,29 +185,23 @@ function DraggablePost({ post }: { post: SocialPost }) {
 }
 
 // Category Drop Zone Component
-function CategoryDropZone({
-  category,
-  post,
-  onDrop,
-}: {
+interface CategoryDropZoneProps {
   category: { id: string; name: string }
+  displayId: number
   post: SocialPost | null
   onDrop: (post: SocialPost) => void
-}) {
+}
+
+function CategoryDropZone({ category, displayId, post, onDrop }: CategoryDropZoneProps) {
   const [{ isOver }, dropRef] = useDrop(() => ({
     accept: "POST",
-    drop: (item: SocialPost) => {
-      onDrop(item)
-    },
+    drop: (item: SocialPost) => onDrop(item),
     collect: (monitor) => ({
       isOver: !!monitor.isOver(),
     }),
   }))
 
-  // Create a ref and attach the drop ref to it
   const ref = useRef<HTMLDivElement>(null)
-
-  // Connect the drop ref to our element ref
   useEffect(() => {
     if (ref.current) {
       dropRef(ref)
@@ -225,9 +220,8 @@ function CategoryDropZone({
       } border-2`}
     >
       <div className="p-2 bg-zinc-900 rounded-t-lg text-center">
-        <h3 className="font-medium text-[#c1ff00]">{category.name}</h3>
+        <h3 className="font-medium text-[#c1ff00]">{displayId}</h3>
       </div>
-
       <div className="flex-1 flex items-center justify-center p-3">
         {post ? (
           <div className="w-full">
@@ -247,3 +241,4 @@ function CategoryDropZone({
     </div>
   )
 }
+
