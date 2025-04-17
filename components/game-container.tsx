@@ -13,39 +13,39 @@ const SOCIAL_POSTS: SocialPost[] = [
   {
     id: 1,
     content:
-      "We help your brand achieve the growth it is capable of through strategic digital marketing planning & execution.",
+      "We help your brand achieve the growth it is capable of through strategic digital marketing planning & execution.We help your brand achieve the growth it is capable of through strategic digital marketing planning & execution.",
     category: "branding",
-    image: "/images/post1.png",
+    image: "/images/The-Marketing-Needed-To-Make-Sense.png",
   },
   {
     id: 2,
-    content: "Creative marketing solutions that blend branding and content with data-driven strategies.",
+    content: "Creative marketing solutions that blend branding and content with data-driven strategies.Creative marketing solutions that blend branding and content with data-driven strategies.",
     category: "strategy",
-    image: "/images/post2.png",
+    image: "/images/improve.png",
   },
   {
     id: 3,
     content: "Our approach combines creative design with analytical insights to drive real growth.",
     category: "analytics",
-    image: "/images/post3.png",
+    image: "/images/posting.png",
   },
   {
     id: 4,
     content: "Elevate your social media presence with our tailored content strategies.",
     category: "social",
-    image: "/images/post4.png",
+    image: "/images/1hour.png",
   },
   {
     id: 5,
     content: "Transform your digital footprint with our comprehensive marketing solutions.",
     category: "digital",
-    image: "/images/post5.png",
+    image: "/images/invisible.png",
   },
   {
     id: 6,
     content: "Data-driven decisions lead to measurable growth. Let us show you how.",
     category: "analytics",
-    image: "/images/post6.png",
+    image: "/images/post.png",
   },
 ]
 
