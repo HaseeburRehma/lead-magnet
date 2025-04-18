@@ -211,7 +211,7 @@ function CategoryDropZone({ category, displayId, post, onDrop }: CategoryDropZon
   return (
     <div
       ref={ref}
-      className={`h-64 rounded-lg flex flex-col transition-all ${
+      className={`h-auto rounded-lg flex flex-col transition-all ${
         isOver
           ? "bg-[#c1ff00]/20 border-[#c1ff00]"
           : post
