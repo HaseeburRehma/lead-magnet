@@ -3,6 +3,8 @@
 import { useState, useCallback } from "react"
 import { DndProvider } from "react-dnd"
 import { HTML5Backend } from "react-dnd-html5-backend"
+import { TouchBackend } from "react-dnd-touch-backend"
+import { isTouchDevice } from "@/lib/utils"
 import GameBoard from "./game-board"
 import GameIntro from "./game-intro"
 import GameSuccess from "./game-success"
@@ -52,10 +54,23 @@ const SOCIAL_POSTS: SocialPost[] = [
 // Game states
 type GameState = "intro" | "playing" | "success"
 
+// Custom DnD backend with options
+const DndBackend = isTouchDevice() ? TouchBackend : HTML5Backend
+
+const dndOptions = {
+  enableMouseEvents: true,
+  enableTouchEvents: true,
+  enableKeyboardEvents: true,
+  delayTouchStart: 50,
+}
+
 export default function GameContainer() {
   const [gameState, setGameState] = useState<GameState>("intro")
   const [email, setEmail] = useState("")
   const [name, setName] = useState("")
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
+  const [company, setCompany] = useState("")
 
   const startGame = () => {
     setGameState("playing")
@@ -66,13 +81,44 @@ export default function GameContainer() {
   }, [])
 
   const handleUserSubmit = (firstName: string, lastName: string, email: string, company: string) => {
-    // Here we combine first and last names for display (you can also store company if needed)
+    // Store all user data for later use
+    setFirstName(firstName)
+    setLastName(lastName)
     setName(`${firstName} ${lastName}`)
     setEmail(email)
+    setCompany(company)
     startGame()
   }
-  
-  
+
+  const handleGameSubmit = useCallback(
+    async (score: number, correctOrder: string[]) => {
+      try {
+        // Send the results to the server with all user data
+        await fetch("/api/submit-form", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            firstName,
+            lastName,
+            email,
+            company,
+            score,
+            correctOrder,
+          }),
+        })
+
+        // Show success screen
+        handleSuccess()
+      } catch (error) {
+        console.error("Error submitting results:", error)
+        // Still show success screen even if there's an error
+        handleSuccess()
+      }
+    },
+    [firstName, lastName, email, company, handleSuccess],
+  )
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
@@ -84,9 +130,7 @@ export default function GameContainer() {
           Social Media Marketing <span className="text-[#c1ff00]">Test Your Skills</span>
         </h1>
         {gameState === "intro" ? (
-          <p className="text-center text-lg text-gray-300">
-            Are You Ready To Test Your Social Media Marketing Skills?
-          </p>
+          <p className="text-center text-lg text-gray-300">Are You Ready To Test Your Social Media Marketing Skills?</p>
         ) : (
           <p className="text-center text-lg text-gray-300">
             Think like a social media marketer and strategist. Your choices reflect your skills!
@@ -97,8 +141,8 @@ export default function GameContainer() {
       {gameState === "intro" && <GameIntro onStart={handleUserSubmit} />}
 
       {gameState === "playing" && (
-        <DndProvider backend={HTML5Backend}>
-          <GameBoard posts={SOCIAL_POSTS} onSubmit={handleSuccess} />
+        <DndProvider backend={DndBackend} options={dndOptions}>
+          <GameBoard posts={SOCIAL_POSTS} onSubmit={handleGameSubmit} />
         </DndProvider>
       )}
 

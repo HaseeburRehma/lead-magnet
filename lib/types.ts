@@ -5,7 +5,10 @@ export interface SocialPost {
   image: string
 }
 
-export interface UserData {
-  name: string
+export interface FormData {
+  firstName: string
+  lastName: string
   email: string
+  company: string
+  recaptchaToken: string
 }

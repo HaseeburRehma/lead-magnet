@@ -1,10 +1,12 @@
+const RECAPTCHA_BYPASS_ENABLED = process.env.NODE_ENV !== "production"
+
 import { NextResponse } from "next/server"
 import nodemailer from "nodemailer"
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { firstName, lastName, email, company, score, correctOrder } = body
+    const { firstName, lastName, email, company, score, correctOrder, recaptchaToken } = body
     const fullName = `${firstName} ${lastName}`
 
     console.log("Form submission received:", {
@@ -13,19 +15,56 @@ export async function POST(request: Request) {
       date: new Date().toISOString(),
     })
 
+    // Validate required fields
+    if (!firstName || !lastName || !email || !company) {
+      return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 })
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ success: false, message: "Invalid email format" }, { status: 400 })
+    }
+
+    // Skip reCAPTCHA verification if bypass is enabled and token is "test-bypass"
+    if (
+      !RECAPTCHA_BYPASS_ENABLED &&
+      recaptchaToken &&
+      process.env.RECAPTCHA_SECRET_KEY
+    ) {
+      try {
+        const recaptchaResponse = await fetch(
+          `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`,
+          {
+            method: "POST",
+          }
+        )
+
+        const recaptchaData = await recaptchaResponse.json()
+
+        if (!recaptchaData.success) {
+          return NextResponse.json({ success: false, message: "reCAPTCHA verification failed" }, { status: 400 })
+        }
+      } catch (error) {
+        console.error("reCAPTCHA verification error:", error)
+        // Continue with form submission even if reCAPTCHA verification fails
+      }
+    }
+
+
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
-      port: parseInt(process.env.SMTP_PORT || '587'),
-      secure: false,
+      port: 465,
+      secure: true, // Required for port 465
       auth: {
         user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
+        pass: process.env.SMTP_PASSWORD,
       },
     })
 
     // Email to the user
     await transporter.sendMail({
-      from: `"${fullName}" <${email}>`, // User's email
+      from: `"Alev Digital" <${process.env.SMTP_USER}>`, // Changed to use SMTP_USER as sender
       to: email,
       subject: "Thank you for playing the Alev Digital Social Media Challenge",
       html: `
@@ -54,7 +93,7 @@ export async function POST(request: Request) {
 
     // Email to the admin
     await transporter.sendMail({
-      from: `"${fullName}" <${email}>`,
+      from: `"${fullName}" <${process.env.SMTP_USER}>`, // Changed to use SMTP_USER as sender
       to: process.env.ADMIN_EMAIL,
       subject: "New Social Media Challenge Submission",
       html: `
@@ -63,10 +102,13 @@ export async function POST(request: Request) {
           <p><strong>Name:</strong> ${fullName}</p>
           <p><strong>Email:</strong> ${email}</p>
           <p><strong>Company:</strong> ${company}</p>
-          <p><strong>Score:</strong> ${score || 'N/A'}</p>
+          <p><strong>Score:</strong> ${score || "N/A"}</p>
           <p><strong>Submitted At:</strong> ${new Date().toLocaleString()}</p>
-          <p><strong>Correct Order:</strong></p>
-          <ol>${correctOrder?.map((item: string) => `<li>${item}</li>`).join('')}</ol>
+          ${correctOrder
+          ? `<p><strong>Correct Order:</strong></p>
+          <ol>${correctOrder?.map((item: string) => `<li>${item}</li>`).join("")}</ol>`
+          : ""
+        }
         </div>
       `,
     })
@@ -79,6 +121,12 @@ export async function POST(request: Request) {
     })
   } catch (error) {
     console.error("Error processing submission:", error)
-    return NextResponse.json({ error: "Failed to process submission" }, { status: 500 })
+    console.error("Error processing submission:", error instanceof Error ? error.message : error)
+
+    return NextResponse.json(
+      { success: false, message: "Something went wrong while processing your submission." },
+      { status: 500 }
+    )
   }
+
 }
