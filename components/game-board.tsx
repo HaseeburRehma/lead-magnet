@@ -5,7 +5,7 @@ import { useDrag, useDrop } from "react-dnd"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import type { SocialPost } from "@/lib/types"
-import { Shuffle, Send, AlertCircle } from "lucide-react"
+import { Shuffle, Send, AlertCircle, Heart, MessageCircle, Bookmark, Share2, MoreHorizontal } from "lucide-react"
 
 interface GameBoardProps {
   posts: SocialPost[]
@@ -168,18 +168,62 @@ function DraggablePost({ post }: { post: SocialPost }) {
     }
   }, [dragRef])
 
+  // Split content to separate hashtags
+  const { mainContent, hashtags } = splitContentAndHashtags(post.content)
+
   return (
     <div
       ref={ref}
-      className={`bg-zinc-800 p-4 rounded-lg cursor-move border-2 border-zinc-700 hover:border-[#c1ff00] transition-all ${
+      className={`bg-white dark:bg-zinc-800 rounded-lg cursor-move border border-gray-200 dark:border-zinc-700 hover:border-[#c1ff00] transition-all ${
         isDragging ? "opacity-50" : "opacity-100"
       }`}
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
-      <div className="aspect-video bg-zinc-700 rounded mb-3 overflow-hidden">
+      {/* Instagram post header */}
+      <div className="flex items-center p-3 border-b border-gray-200 dark:border-zinc-700">
+        <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-yellow-400 to-pink-600 p-[2px]">
+          <div className="h-full w-full rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center">
+            <img src="/images/alev-logo.png" alt="Alev Digital" className="h-6 w-6 rounded-full object-cover" />
+          </div>
+        </div>
+        <div className="ml-3 flex-1">
+          <p className="font-semibold text-sm">alevdigital</p>
+          <p className="text-xs text-gray-500">Sponsored</p>
+        </div>
+        <MoreHorizontal className="h-5 w-5 text-gray-500" />
+      </div>
+
+      {/* Post image */}
+      <div className="aspect-square bg-gray-100 dark:bg-zinc-700 overflow-hidden">
         <img src={post.image || "/placeholder.svg"} alt="Social media post" className="w-full h-full object-cover" />
       </div>
-      <p className="text-sm">{post.content}</p>
+
+      {/* Post actions */}
+      <div className="p-3">
+        <div className="flex justify-between mb-2">
+          <div className="flex space-x-4">
+            <Heart className="h-6 w-6" />
+            <MessageCircle className="h-6 w-6" />
+            <Share2 className="h-6 w-6" />
+          </div>
+          <Bookmark className="h-6 w-6" />
+        </div>
+
+        {/* Likes */}
+        <p className="font-semibold text-sm mb-1">{Math.floor(Math.random() * 1000) + 100} likes</p>
+
+        {/* Caption */}
+        <div className="mb-1">
+          <span className="font-semibold text-sm mr-1">alevdigital</span>
+          <span className="text-sm">{mainContent}</span>
+        </div>
+
+        {/* Hashtags */}
+        <p className="text-sm text-blue-500 mb-1">{hashtags}</p>
+
+        {/* Post date */}
+        <p className="text-xs text-gray-500 uppercase mt-2">{Math.floor(Math.random() * 12) + 1} hours ago</p>
+      </div>
     </div>
   )
 }
@@ -208,6 +252,9 @@ function CategoryDropZone({ category, displayId, post, onDrop }: CategoryDropZon
     }
   }, [dropRef])
 
+  // Split content to separate hashtags if post exists
+  const { mainContent, hashtags } = post ? splitContentAndHashtags(post.content) : { mainContent: "", hashtags: "" }
+
   return (
     <div
       ref={ref}
@@ -215,30 +262,84 @@ function CategoryDropZone({ category, displayId, post, onDrop }: CategoryDropZon
         isOver
           ? "bg-[#c1ff00]/20 border-[#c1ff00]"
           : post
-            ? "bg-zinc-800 border-zinc-700"
-            : "bg-zinc-800/50 border-zinc-700 border-dashed"
+            ? "bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700"
+            : "bg-white/50 dark:bg-zinc-800/50 border-gray-200 dark:border-zinc-700 border-dashed"
       } border-2`}
     >
       <div className="p-2 bg-zinc-900 rounded-t-lg text-center">
         <h3 className="font-medium text-[#c1ff00]">{displayId}</h3>
       </div>
-      <div className="flex-1 flex items-center justify-center p-3">
+      <div className="flex-1 flex items-center justify-center p-0">
         {post ? (
           <div className="w-full">
-            <div className="aspect-video bg-zinc-700 rounded mb-2 overflow-hidden">
+            {/* Instagram post header */}
+            <div className="flex items-center p-2 border-b border-gray-200 dark:border-zinc-700">
+              <div className="h-6 w-6 rounded-full bg-gradient-to-tr from-yellow-400 to-pink-600 p-[1px]">
+                <div className="h-full w-full rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center">
+                  <img src="/images/alev-logo.png" alt="Alev Digital" className="h-4 w-4 rounded-full object-cover" />
+                </div>
+              </div>
+              <div className="ml-2 flex-1">
+                <p className="font-semibold text-xs">alevdigital</p>
+              </div>
+              <MoreHorizontal className="h-4 w-4 text-gray-500" />
+            </div>
+
+            {/* Post image */}
+            <div className="aspect-square bg-gray-100 dark:bg-zinc-700 overflow-hidden">
               <img
                 src={post.image || "/placeholder.svg"}
                 alt="Social media post"
                 className="w-full h-full object-cover"
               />
             </div>
-            <p className="text-xs">{post.content}</p>
+
+            {/* Post actions */}
+            <div className="p-2">
+              <div className="flex justify-between mb-1">
+                <div className="flex space-x-2">
+                  <Heart className="h-4 w-4" />
+                  <MessageCircle className="h-4 w-4" />
+                  <Share2 className="h-4 w-4" />
+                </div>
+                <Bookmark className="h-4 w-4" />
+              </div>
+
+              {/* Caption - truncated for space */}
+              <div className="mb-1">
+                <span className="font-semibold text-xs mr-1">alevdigital</span>
+                <span className="text-xs line-clamp-1">{mainContent}</span>
+              </div>
+
+              {/* Hashtags - truncated */}
+              <p className="text-xs text-blue-500 line-clamp-1">{hashtags}</p>
+            </div>
           </div>
         ) : (
-          <p className="text-gray-500 text-sm text-center">Drop a social media post here</p>
+          <p className="text-gray-500 text-sm text-center p-4">Drop a social media post here</p>
         )}
       </div>
     </div>
   )
 }
 
+// Helper function to split content into main text and hashtags
+function splitContentAndHashtags(content: string): { mainContent: string; hashtags: string } {
+  // Find all hashtags in the content
+  const hashtagRegex = /#[a-zA-Z0-9]+/g
+  const hashtags = content.match(hashtagRegex) || []
+
+  // Remove hashtags from the main content
+  let mainContent = content
+  hashtags.forEach((tag) => {
+    mainContent = mainContent.replace(tag, "")
+  })
+
+  // Clean up any extra spaces
+  mainContent = mainContent.trim()
+
+  return {
+    mainContent,
+    hashtags: hashtags.join(" "),
+  }
+}
