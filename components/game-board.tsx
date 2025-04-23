@@ -95,8 +95,17 @@ export default function GameBoard({ posts, onSubmit }: GameBoardProps) {
   // Handle submit with validation
   const handleSubmit = () => {
     if (allPostsPlaced) {
-      // Calculate score based on correct placement (simplified example)
-      const score = Math.floor(Math.random() * 100) // Replace with actual scoring logic
+      // Calculate score based on correct placement
+      // This is a simple scoring algorithm - you can make it more sophisticated
+      const correctPlacements = CATEGORIES.filter((category) => {
+        const post = placedPosts[category.id]
+        return post && post.category === category.id
+      }).length
+
+      // Calculate score as percentage of correct placements
+      const score = Math.round((correctPlacements / CATEGORIES.length) * 100)
+
+      // Pass score and order to the parent component
       onSubmit(score, correctOrder)
     }
   }
@@ -127,6 +136,7 @@ export default function GameBoard({ posts, onSubmit }: GameBoardProps) {
       window.removeEventListener("dragover", onDragOver)
     }
   }, [draggingPostId])
+
   return (
     <div className="space-y-8 min-h-[calc(100vh-200px)]">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
@@ -244,8 +254,6 @@ function DraggablePost({
     }),
   })
 
-
-
   // Use empty image as drag preview (for custom preview)
   useEffect(() => {
     preview(getEmptyImage(), { captureDraggingState: true })
@@ -267,16 +275,17 @@ function DraggablePost({
   return (
     <div
       ref={ref}
-      className={`bg-white dark:bg-zinc-800 rounded-lg cursor-move border border-gray-200 dark:border-zinc-700 hover:border-[#c1ff00] transition-all ${isDragging ? "opacity-50 scale-95" : "opacity-100"
-        }`}
+      className={`bg-white dark:bg-zinc-800 rounded-lg cursor-move border border-gray-200 dark:border-zinc-700 hover:border-[#c1ff00] transition-all ${
+        isDragging ? "opacity-50 scale-95" : "opacity-100"
+      }`}
       style={{
         opacity: isDragging ? 0.5 : 1,
         transform: isDragging ? "scale(0.95)" : "scale(1)",
         transition: "all 0.2s ease-in-out",
       }}
     >
-       {/* Instagram post header */}
-       <div className="flex items-center p-3 border-b border-gray-200 dark:border-zinc-700">
+      {/* Instagram post header */}
+      <div className="flex items-center p-3 border-b border-gray-200 dark:border-zinc-700">
         <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-yellow-400 to-pink-600 p-[2px]">
           <div className="h-full w-full rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center">
             <img src="/images/alev-logo.png" alt="Alev Digital" className="h-6 w-6 rounded-full object-cover" />
@@ -360,12 +369,13 @@ function CategoryDropZone({ category, displayId, post, onDrop, isActive }: Categ
   return (
     <motion.div
       ref={ref}
-      className={`h-auto rounded-lg flex flex-col transition-all ${isOver && canDrop
-        ? "bg-[#c1ff00]/20 border-[#c1ff00]"
-        : post
-          ? "bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700"
-          : "bg-white/50 dark:bg-zinc-800/50 border-gray-200 dark:border-zinc-700 border-dashed"
-        } border-2`}
+      className={`h-auto rounded-lg flex flex-col transition-all ${
+        isOver && canDrop
+          ? "bg-[#c1ff00]/20 border-[#c1ff00]"
+          : post
+            ? "bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700"
+            : "bg-white/50 dark:bg-zinc-800/50 border-gray-200 dark:border-zinc-700 border-dashed"
+      } border-2`}
       animate={{
         scale: isOver && canDrop ? 1.03 : 1,
         boxShadow: isOver && canDrop ? "0 10px 25px rgba(193, 255, 0, 0.2)" : "0 0 0 rgba(0,0,0,0)",

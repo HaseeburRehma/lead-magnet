@@ -15,37 +15,42 @@ const SOCIAL_POSTS: SocialPost[] = [
   {
     id: 1,
     content:
-      "We didn’t create Alev Digital to chase trends. We built it to challenge everything wrong with how marketing is done.No Nonsense Marketing Drives Our Way Forward! #Creativemarketingagency #digitalmarketing",
+      "We didn't create Alev Digital to chase trends. We built it to challenge everything wrong with how marketing is done.No Nonsense Marketing Drives Our Way Forward! #Creativemarketingagency #digitalmarketing",
     category: "Origin Story",
     image: "/images/The-Marketing-Needed-To-Make-Sense.png",
   },
   {
     id: 2,
-    content: "Your engagement problem isn’t about effort. It’s about direction. We plan and strategize so your socials get an influx of target audience. Strategy over spray-and-pray. #socialmediaengagement #socialmediamanagement #fixyourfeed",
+    content:
+      "Your engagement problem isn't about effort. It's about direction. We plan and strategize so your socials get an influx of target audience. Strategy over spray-and-pray. #socialmediaengagement #socialmediamanagement #fixyourfeed",
     category: "Problem–Solution",
     image: "/images/improve.png",
   },
   {
     id: 3,
-    content: "Start with a calendar, speak with clarity, and stop writing for algorithms. These 3 shifts will flip your performance. We call it smart content. You’ll call it results. #ContentThatConverts #MarketingTips #SocialMediaStrategy",
+    content:
+      "Start with a calendar, speak with clarity, and stop writing for algorithms. These 3 shifts will flip your performance. We call it smart content. You'll call it results. #ContentThatConverts #MarketingTips #SocialMediaStrategy",
     category: "Value",
     image: "/images/posting.png",
   },
   {
     id: 4,
-    content: "Nothing viral. No gimmicks. Just a clear message, better targeting, and consistent execution. Growth isn't luck when it’s engineered. #ClientWins #StrategicGrowth",
+    content:
+      "Nothing viral. No gimmicks. Just a clear message, better targeting, and consistent execution. Growth isn't luck when it's engineered. #ClientWins #StrategicGrowth",
     category: "Social Proof",
     image: "/images/1hour.png",
   },
   {
     id: 5,
-    content: "We don’t wing it. We use a system that builds your voice into content pillars mapped to results. What looks like speed is structure. #ContentPlanning #SocialWorkflow",
+    content:
+      "We don't wing it. We use a system that builds your voice into content pillars mapped to results. What looks like speed is structure. #ContentPlanning #SocialWorkflow",
     category: "Work Process",
     image: "/images/invisible.png",
   },
   {
     id: 6,
-    content: "We build social media that leads somewhere: growth, leads, and traction. Book a strategy call, and let’s get to work.  No pressure. Just proof.#BookAStrategyCall #FixYourMarketing #SocialMediaThatWorks ",
+    content:
+      "We build social media that leads somewhere: growth, leads, and traction. Book a strategy call, and let's get to work.  No pressure. Just proof.#BookAStrategyCall #FixYourMarketing #SocialMediaThatWorks ",
     category: "Call to Action",
     image: "/images/post.png",
   },
@@ -93,8 +98,10 @@ export default function GameContainer() {
   const handleGameSubmit = useCallback(
     async (score: number, correctOrder: string[]) => {
       try {
+        console.log("Submitting game results:", { firstName, lastName, email, company, score, correctOrder })
+
         // Send the results to the server with all user data
-        await fetch("/api/submit-form", {
+        const response = await fetch("/api/submit-form", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -108,6 +115,10 @@ export default function GameContainer() {
             correctOrder,
           }),
         })
+
+        if (!response.ok) {
+          throw new Error("Failed to submit results")
+        }
 
         // Show success screen
         handleSuccess()

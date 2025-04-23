@@ -2,23 +2,21 @@
 declare global {
   interface Window {
     grecaptcha: {
-      render: (...args: any[]) => any; // or define exact args if needed
-      getResponse: (...args: any[]) => any;
-      reset: (...args: any[]) => any;
-      ready: (cb: () => void) => void;
-      execute?: (siteKey: string, options: { action: string }) => Promise<string>; // optional if using v2
-    };
+      render: (...args: any[]) => any
+      getResponse: (...args: any[]) => any
+      reset: (...args: any[]) => any
+      ready: (cb: () => void) => void
+      execute?: (siteKey: string, options: { action: string }) => Promise<string>
+    }
   }
 }
 
-
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import ReCAPTCHA from "react-google-recaptcha"
+import type ReCAPTCHA from "react-google-recaptcha"
 
 interface GameIntroProps {
   onStart: (firstName: string, lastName: string, email: string, company: string) => void
@@ -46,7 +44,7 @@ export default function GameIntro({ onStart }: GameIntroProps) {
         setTimeout(checkRecaptchaLoaded, 100)
       }
     }
-    
+
     checkRecaptchaLoaded()
 
     // Ensure reCAPTCHA script is loaded
@@ -111,39 +109,16 @@ export default function GameIntro({ onStart }: GameIntroProps) {
 
     if (!hasError) {
       try {
-        // Send form data to API
-        const response = await fetch("/api/submit-form", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            firstName,
-            lastName,
-            email,
-            company,
-            recaptchaToken: isRecaptchaDisabled ? "test-bypass" : recaptchaValue,
-          }),
-        })
-
-        if (response.ok) {
-          // Start the game if form submission was successful
-          onStart(firstName, lastName, email, company)
-        } else {
-          const data = await response.json()
-          throw new Error(data.message || "Something went wrong")
-        }
+        // Start the game directly without sending form data to API
+        // We'll only send data when the game is completed
+        onStart(firstName, lastName, email, company)
       } catch (error) {
-        console.error("Error submitting form:", error)
+        console.error("Error starting game:", error)
         setErrors((prev) => ({
           ...prev,
-          email: error instanceof Error ? error.message : "Failed to submit form",
+          email: error instanceof Error ? error.message : "Failed to start game",
         }))
-      } finally {
         setIsSubmitting(false)
-        // Reset reCAPTCHA
-        recaptchaRef.current?.reset()
-        setRecaptchaValue(null)
       }
     } else {
       setIsSubmitting(false)
@@ -258,7 +233,9 @@ export default function GameIntro({ onStart }: GameIntroProps) {
             />
             {errors.company && <p className="text-red-500 text-sm mt-1">{errors.company}</p>}
           </div>
-{/*
+
+          {/* Commented out reCAPTCHA as requested */}
+          {/*
           <div className="mt-4 flex justify-center">
             {recaptchaLoaded && (
               <ReCAPTCHA
