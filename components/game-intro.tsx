@@ -16,7 +16,12 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import type ReCAPTCHA from "react-google-recaptcha"
+import dynamic from "next/dynamic"
+
+// Dynamically import the ReCAPTCHA component — no SSR
+const ReCAPTCHA = dynamic(() => import("react-google-recaptcha"), {
+  ssr: false,
+})
 
 interface GameIntroProps {
   onStart: (firstName: string, lastName: string, email: string, company: string) => void
@@ -33,7 +38,7 @@ export default function GameIntro({ onStart }: GameIntroProps) {
   const [recaptchaLoaded, setRecaptchaLoaded] = useState(false)
   const isRecaptchaDisabled = true // set to false in production
 
-  const recaptchaRef = useRef<ReCAPTCHA>(null)
+  const recaptchaRef = useRef< ReCAPTCHA>(null)
 
   // Check if reCAPTCHA script is loaded
   useEffect(() => {
