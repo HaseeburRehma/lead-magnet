@@ -1,8 +1,10 @@
 // pages/api/verify-email.ts
 import type { NextApiRequest, NextApiResponse } from "next";
+import disposableDomains from "disposable-email-domains";
+import dns from "dns/promises";
 
 type ResponseData =
-  | { is_valid: boolean }
+  | { is_valid: true }
   | { is_valid: false; error: string };
 
 export default async function handler(
@@ -14,42 +16,41 @@ export default async function handler(
     return res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 
-  const email = req.query.email as string;
+  const email = (req.query.email as string || "").trim().toLowerCase();
   if (!email) {
     return res.status(400).json({ is_valid: false, error: "Missing email" });
   }
 
-  const apiKey = process.env.EMAIL_VERIFICATION_API_KEY;
-  if (!apiKey) {
+  // 1️⃣ Basic syntax check
+  const emailRegex =
+    /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@(([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,})$/;
+  if (!emailRegex.test(email)) {
     return res
-      .status(500)
-      .json({ is_valid: false, error: "Verification API key not configured" });
+      .status(400)
+      .json({ is_valid: false, error: "Invalid email format" });
   }
 
+  // 2️⃣ Disposable‐email block
+  const domain = email.split("@")[1];
+  if (disposableDomains.includes(domain)) {
+    return res
+      .status(400)
+      .json({ is_valid: false, error: "Temporary email addresses are not allowed" });
+  }
+
+  // 3️⃣ MX record lookup
   try {
-    // Call AbstractAPI Email Validation
-    const verifyRes = await fetch(
-      `https://emailvalidation.abstractapi.com/v1/?api_key=${apiKey}&email=${encodeURIComponent(
-        email
-      )}`
-    );
-
-    if (!verifyRes.ok) {
-      throw new Error(`Service returned ${verifyRes.status}`);
+    const mxRecords = await dns.resolveMx(domain);
+    if (!mxRecords || mxRecords.length === 0) {
+      throw new Error("No MX records found");
     }
-
-    const payload = await verifyRes.json();
-    // AbstractAPI returns a `deliverability` field:
-    // "DELIVERABLE", "UNDELIVERABLE", "UNKNOWN", etc.
-    const isValid =
-      payload.deliverability &&
-      payload.deliverability.toUpperCase() === "DELIVERABLE";
-
-    return res.status(200).json({ is_valid: isValid });
   } catch (err: any) {
-    console.error("Email verify error:", err);
+    console.error("MX lookup failed:", err);
     return res
-      .status(500)
-      .json({ is_valid: false, error: err.message || "Unknown error" });
+      .status(400)
+      .json({ is_valid: false, error: "Email domain does not accept mail" });
   }
+
+  // If we reach here, checks passed
+  return res.status(200).json({ is_valid: true });
 }

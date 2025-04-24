@@ -235,8 +235,8 @@ export default function GameIntro({ onStart }: GameIntroProps) {
           </div>
 
           {/* Commented out reCAPTCHA as requested */}
-          {/*
-          <div className="mt-4 flex justify-center">
+        
+          <div className="mt-4 flex justify-start">
             {recaptchaLoaded && (
               <ReCAPTCHA
                 ref={recaptchaRef}
@@ -246,7 +246,7 @@ export default function GameIntro({ onStart }: GameIntroProps) {
               />
             )}
           </div>
-          */}
+          
           {errors.recaptcha && <p className="text-red-500 text-sm text-center mt-1">{errors.recaptcha}</p>}
         </form>
       </CardContent>
