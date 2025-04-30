@@ -35,14 +35,14 @@ export default function GameOver({ onTryAgain }: GameOverProps) {
         </div>
       </CardContent>
       <CardFooter className="flex flex-col space-y-3">
-        <Button onClick={onTryAgain} className="w-full bg-[#c1ff00] hover:bg-[#a8e600] text-black font-bold">
+        <Button onClick={onTryAgain} className="w-full bg-[#cff564] hover:bg-[#a8e600] text-black font-bold">
           Try Again
         </Button>
         <a
           href="https://alevdigital.com/contact"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#c1ff00] hover:underline text-sm"
+          className="text-[#cff564] hover:underline text-sm"
         >
           Contact Alev Digital
         </a>

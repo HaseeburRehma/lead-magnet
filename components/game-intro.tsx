@@ -131,7 +131,7 @@ export default function GameIntro({ onStart }: GameIntroProps) {
   }
 
   return (
-    <Card className="bg-zinc-900 border-[#c1ff00]/30 max-w-2xl mx-auto">
+    <Card className="bg-zinc-900 border-[#cff564]/30 max-w-2xl mx-auto">
       <CardHeader>
         <CardTitle className="text-2xl text-center">How To Play ?</CardTitle>
         <CardDescription className="text-center text-gray-400">
@@ -141,31 +141,31 @@ export default function GameIntro({ onStart }: GameIntroProps) {
       <CardContent className="space-y-4">
         <div className="grid gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-[#c1ff00] text-black w-8 h-8 rounded-full flex items-center justify-center font-bold">
+            <div className="bg-[#cff564] text-black w-8 h-8 rounded-full flex items-center justify-center font-bold">
               1
             </div>
             <p>You'll see 6 designed posts, each reflecting a key stage in brand building.</p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="bg-[#c1ff00] text-black w-8 h-8 rounded-full flex items-center justify-center font-bold">
+            <div className="bg-[#cff564] text-black w-8 h-8 rounded-full flex items-center justify-center font-bold">
               2
             </div>
             <p>Drag and drop them into the sequence you believe drives real results.</p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="bg-[#c1ff00] text-black w-8 h-8 rounded-full flex items-center justify-center font-bold">
+            <div className="bg-[#cff564] text-black w-8 h-8 rounded-full flex items-center justify-center font-bold">
               3
             </div>
             <p>Shuffle or undo your moves until you are confident.</p>
           </div>
           <div className="flex items-center gap-3">
-            <div className="bg-[#c1ff00] text-black w-8 h-8 rounded-full flex items-center justify-center font-bold">
+            <div className="bg-[#cff564] text-black w-8 h-8 rounded-full flex items-center justify-center font-bold">
               4
             </div>
             <p>Hit "Submit Choices" once you're confident with your strategy.</p>
           </div>
           <div className="flex items-center gap-3 flex-wrap md:flex-nowrap">
-            <div className="bg-[#c1ff00] text-black w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0">
+            <div className="bg-[#cff564] text-black w-8 h-8 rounded-full flex items-center justify-center font-bold shrink-0">
               5
             </div>
             <p>
@@ -185,7 +185,7 @@ export default function GameIntro({ onStart }: GameIntroProps) {
               placeholder="John"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
-              className="bg-zinc-800 border-zinc-700 focus:border-[#c1ff00] focus:ring-[#c1ff00]"
+              className="bg-zinc-800 border-zinc-700 focus:border-[#cff564] focus:ring-[#cff564]"
               disabled={isSubmitting}
             />
             {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
@@ -201,7 +201,7 @@ export default function GameIntro({ onStart }: GameIntroProps) {
               placeholder="Doe"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
-              className="bg-zinc-800 border-zinc-700 focus:border-[#c1ff00] focus:ring-[#c1ff00]"
+              className="bg-zinc-800 border-zinc-700 focus:border-[#cff564] focus:ring-[#cff564]"
               disabled={isSubmitting}
             />
             {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
@@ -217,7 +217,7 @@ export default function GameIntro({ onStart }: GameIntroProps) {
               placeholder="your@email.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="bg-zinc-800 border-zinc-700 focus:border-[#c1ff00] focus:ring-[#c1ff00]"
+              className="bg-zinc-800 border-zinc-700 focus:border-[#cff564] focus:ring-[#cff564]"
               disabled={isSubmitting}
             />
             {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
@@ -233,7 +233,7 @@ export default function GameIntro({ onStart }: GameIntroProps) {
               placeholder="Company Name"
               value={company}
               onChange={(e) => setCompany(e.target.value)}
-              className="bg-zinc-800 border-zinc-700 focus:border-[#c1ff00] focus:ring-[#c1ff00]"
+              className="bg-zinc-800 border-zinc-700 focus:border-[#cff564] focus:ring-[#cff564]"
               disabled={isSubmitting}
             />
             {errors.company && <p className="text-red-500 text-sm mt-1">{errors.company}</p>}
@@ -258,7 +258,7 @@ export default function GameIntro({ onStart }: GameIntroProps) {
       <CardFooter>
         <Button
           onClick={handleSubmit}
-          className="w-full bg-[#c1ff00] hover:bg-[#a8e600] text-black font-bold"
+          className="w-full bg-[#cff564] hover:bg-[#a8e600] text-black font-bold"
           disabled={isSubmitting}
         >
           {isSubmitting ? "Submitting..." : "Start Challenge"}

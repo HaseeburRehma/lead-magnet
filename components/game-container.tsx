@@ -138,7 +138,7 @@ export default function GameContainer() {
           <img src="/images/alev-logo.png" alt="Alev Digital" className="h-12" />
         </div>
         <h1 className="text-4xl md:text-5xl font-bold text-center mb-2">
-          Social Media Marketing <span className="text-[#c1ff00]">Test Your Skills</span>
+          Social Media Marketing <span className="text-[#cff564]">Test Your Skills</span>
         </h1>
         {gameState === "intro" ? (
           <p className="text-center text-lg text-gray-300">Are You Ready To Test Your Social Media Marketing Skills?</p>
