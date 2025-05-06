@@ -101,7 +101,6 @@ export default function GameContainer() {
         console.log("Submitting game results:", { firstName, lastName, email, company, score, correctOrder })
 
         // Send the results to the server with all user data
-        // Note: Make sure the URL is correct - no trailing slash
         const response = await fetch("/api/submit-form", {
           method: "POST",
           headers: {
@@ -118,9 +117,7 @@ export default function GameContainer() {
         })
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
-          console.error("Server response:", response.status, errorData)
-          throw new Error(`Failed to submit results: ${response.status}`)
+          throw new Error("Failed to submit results")
         }
 
         // Show success screen
