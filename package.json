@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "clean": "if exist .next rmdir /s /q .next && if exist out rmdir /s /q out",
+    "clean-build": "npm run clean && npm run build",
     "export": "next export",
     "start": "next start",
     "lint": "next lint"

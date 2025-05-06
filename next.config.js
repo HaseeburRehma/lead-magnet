@@ -15,6 +15,10 @@ try {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'export',
+ 
+  trailingSlash: true, // Helps with traditional hosting
+  basePath: '',
+  assetPrefix: '',
   eslint: {
     ignoreDuringBuilds: true,
   },
