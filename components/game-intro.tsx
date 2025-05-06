@@ -226,7 +226,7 @@ export default function GameIntro({ onStart }: GameIntroProps) {
             {errors.company && <p className="text-red-500 text-sm mt-1">{errors.company}</p>}
           </div>
 
-          <div className="mt-4 flex justify-center w-full overflow-hidden">
+          <div className="mt-4 flex justify-start w-full overflow-hidden">
             {recaptchaLoaded && (
               <ReCAPTCHA
                 ref={recaptchaRef}
