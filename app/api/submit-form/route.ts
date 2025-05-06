@@ -1,9 +1,7 @@
-export const runtime = 'nodejs'
+export const runtime = "nodejs"
 
-import { NextResponse } from 'next/server'
-import nodemailer from 'nodemailer'
-import disposableDomains from "disposable-email-domains"
-import dns from "dns/promises"
+import { NextResponse } from "next/server"
+import nodemailer from "nodemailer"
 
 export async function POST(request: Request) {
   try {
@@ -12,85 +10,36 @@ export async function POST(request: Request) {
     const { firstName, lastName, email, company, score, correctOrder, recaptchaToken } = body
     const fullName = `${firstName} ${lastName}`
 
-    console.log('Form submission received:', {
+    console.log("Form submission received:", {
       name: fullName,
       email,
       date: new Date().toISOString(),
       isGameSubmission: score !== undefined,
+      hasRecaptchaToken: !!recaptchaToken,
     })
 
     // Validate required fields
     if (!firstName || !lastName || !email || !company) {
-      return NextResponse.json(
-        { success: false, message: 'All fields are required' },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 })
     }
 
     // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { success: false, message: 'Invalid email format' },
-        { status: 400 }
-      )
-    }
-    // Check for disposable email domains
-    const domain = email.split("@")[1]
-    if (disposableDomains.includes(domain)) {
-      return NextResponse.json(
-        { success: false, message: "Temporary or disposable email addresses are not allowed" },
-        { status: 400 },
-      )
-    }
-
-    // Verify MX records (only if not in development mode)
-    if (process.env.NODE_ENV === "production") {
-      try {
-        const mxRecords = await dns.resolveMx(domain)
-        if (!mxRecords || mxRecords.length === 0) {
-          return NextResponse.json({ success: false, message: "Email domain does not accept mail" }, { status: 400 })
-        }
-      } catch (err) {
-        console.error("MX lookup failed:", err)
-        // Continue even if MX lookup fails in production
-      }
-    }
-    // Verify reCAPTCHA if token is provided and not in development mode
-    if (recaptchaToken && process.env.RECAPTCHA_SECRET_KEY && process.env.NODE_ENV === "production") {
-      try {
-        const verifyRes = await fetch(
-          `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`,
-          { method: "POST" },
-        )
-        const verifyJson = await verifyRes.json()
-        if (!verifyJson.success) {
-          return NextResponse.json({ success: false, message: "reCAPTCHA verification failed" }, { status: 400 })
-        }
-      } catch (err) {
-        console.error("reCAPTCHA verification error:", err)
-        // In production, we should fail if reCAPTCHA verification fails
-        if (process.env.NODE_ENV === "production") {
-          return NextResponse.json({ success: false, message: "Could not verify you are human" }, { status: 400 })
-        }
-      }
+      return NextResponse.json({ success: false, message: "Invalid email format" }, { status: 400 })
     }
 
     // Only send emails on game submissions (when score is defined)
     if (score !== undefined) {
-      if (process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
-        // Determine secure and port
-        const secure = process.env.SMTP_SECURE === "true"
-        const port = secure ? 465 : Number.parseInt(process.env.SMTP_PORT, 10) || 587
-
+      if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
         // Configure transporter
         const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST, // smtp.gmail.com
-          port: 465, // SSL port
-          secure: true, // MUST be true for port 465
+          host: process.env.SMTP_HOST,
+          port: process.env.SMTP_SECURE === "true" ? 465 : 587,
+          secure: process.env.SMTP_SECURE === "true",
           auth: {
             user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASSWORD, // your app password
+            pass: process.env.SMTP_PASSWORD,
           },
           tls: { rejectUnauthorized: false },
         })
@@ -137,7 +86,7 @@ export async function POST(request: Request) {
           // Notification to admin
           await transporter.sendMail({
             from: `"USER" <${email}>`,
-            to: process.env.ADMIN_EMAIL,
+            to: process.env.ADMIN_EMAIL || process.env.SMTP_USER,
             replyTo: email,
             subject: `New Social Media Challenge Submission - ${fullName}`,
             html: `
@@ -166,17 +115,13 @@ export async function POST(request: Request) {
       }
     }
 
-
     // Always return success
     return NextResponse.json({
       success: true,
       message: `Thank you ${fullName}! We'll contact you at ${email} soon.`,
     })
   } catch (err) {
-    console.error('Error processing submission:', err)
-    return NextResponse.json(
-      { success: false, error: 'Failed to process submission' },
-      { status: 500 }
-    )
+    console.error("Error processing submission:", err)
+    return NextResponse.json({ success: false, error: "Failed to process submission" }, { status: 500 })
   }
 }

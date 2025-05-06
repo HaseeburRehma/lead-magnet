@@ -25,7 +25,7 @@ const ReCAPTCHA = dynamic(() => import("react-google-recaptcha"), {
 })
 
 interface GameIntroProps {
-  onStart: (firstName: string, lastName: string, email: string, company: string) => void
+  onStart: (firstName: string, lastName: string, email: string, company: string, recaptchaToken?: string) => void
 }
 
 export default function GameIntro({ onStart }: GameIntroProps) {
@@ -33,14 +33,21 @@ export default function GameIntro({ onStart }: GameIntroProps) {
   const [lastName, setLastName] = useState("")
   const [email, setEmail] = useState("")
   const [company, setCompany] = useState("")
-  const [errors, setErrors] = useState({ firstName: "", lastName: "", email: "", company: "", recaptcha: "" })
+  const [errors, setErrors] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    company: "",
+    recaptcha: "",
+    general: "",
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [recaptchaValue, setRecaptchaValue] = useState<string | null>(null)
   const [recaptchaLoaded, setRecaptchaLoaded] = useState(false)
   const [isValidatingEmail, setIsValidatingEmail] = useState(false)
 
-  // Set to false in production to enable reCAPTCHA
-  const isRecaptchaDisabled = process.env.NODE_ENV === "development"
+  // Set to false to enable reCAPTCHA
+  const isRecaptchaDisabled = false
 
   const recaptchaRef = useRef<any>(null)
 
@@ -73,39 +80,35 @@ export default function GameIntro({ onStart }: GameIntroProps) {
   }
 
   const handleRecaptchaChange = (value: string | null) => {
+    console.log("reCAPTCHA value changed:", value ? "token received" : "no token")
     setRecaptchaValue(value)
     if (value) {
       setErrors((prev) => ({ ...prev, recaptcha: "" }))
     }
   }
 
-  // Validate email with server
-  const validateEmailWithServer = async (email: string) => {
-    setIsValidatingEmail(true)
-    try {
-      const response = await fetch(`/api/verify-email?email=${encodeURIComponent(email)}`)
-      const data = await response.json()
-
-      if (!data.is_valid) {
-        return { isValid: false, error: data.error || "Invalid email" }
-      }
-
-      return { isValid: true }
-    } catch (error) {
-      console.error("Error validating email:", error)
-      return { isValid: false, error: "Could not validate email" }
-    } finally {
-      setIsValidatingEmail(false)
+  // Basic client-side email validation
+  const validateEmailBasic = (email: string) => {
+    if (!email.trim()) {
+      return { isValid: false, error: "Please enter your email" }
     }
+
+    if (!validateEmail(email)) {
+      return { isValid: false, error: "Please enter a valid email" }
+    }
+
+    return { isValid: true, error: "" }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setErrors({ firstName: "", lastName: "", email: "", company: "", recaptcha: "", general: "" })
 
-    const newErrors = { firstName: "", lastName: "", email: "", company: "", recaptcha: "" }
+    const newErrors = { firstName: "", lastName: "", email: "", company: "", recaptcha: "", general: "" }
     let hasError = false
 
+    // Basic validations
     if (!firstName.trim()) {
       newErrors.firstName = "Please enter your first name"
       hasError = true
@@ -116,19 +119,11 @@ export default function GameIntro({ onStart }: GameIntroProps) {
       hasError = true
     }
 
-    if (!email.trim()) {
-      newErrors.email = "Please enter your email"
+    // Basic email validation
+    const emailValidation = validateEmailBasic(email)
+    if (!emailValidation.isValid) {
+      newErrors.email = emailValidation.error
       hasError = true
-    } else if (!validateEmail(email)) {
-      newErrors.email = "Please enter a valid email"
-      hasError = true
-    } else {
-      // Validate email with server
-      const emailValidation = await validateEmailWithServer(email)
-      if (!emailValidation.isValid) {
-        newErrors.email = emailValidation.error
-        hasError = true
-      }
     }
 
     if (!company.trim()) {
@@ -136,48 +131,27 @@ export default function GameIntro({ onStart }: GameIntroProps) {
       hasError = true
     }
 
-    if (!recaptchaValue && !isRecaptchaDisabled) {
+    // reCAPTCHA validation
+    if (!isRecaptchaDisabled && !recaptchaValue) {
       newErrors.recaptcha = "Please complete the reCAPTCHA"
       hasError = true
     }
 
-    setErrors(newErrors)
+    if (hasError) {
+      setErrors(newErrors)
+      setIsSubmitting(false)
+      return
+    }
 
-    if (!hasError) {
-      try {
-        // Verify reCAPTCHA token if not disabled
-        if (!isRecaptchaDisabled && recaptchaValue) {
-          const recaptchaResponse = await fetch("/api/verify-recaptcha", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ token: recaptchaValue }),
-          })
-
-          const recaptchaData = await recaptchaResponse.json()
-
-          if (!recaptchaData.success) {
-            setErrors((prev) => ({
-              ...prev,
-              recaptcha: recaptchaData.message || "reCAPTCHA verification failed",
-            }))
-            setIsSubmitting(false)
-            return
-          }
-        }
-
-        // Start the game
-        onStart(firstName, lastName, email, company)
-      } catch (error) {
-        console.error("Error starting game:", error)
-        setErrors((prev) => ({
-          ...prev,
-          email: error instanceof Error ? error.message : "Failed to start game",
-        }))
-        setIsSubmitting(false)
-      }
-    } else {
+    try {
+      // Start the game with the reCAPTCHA token
+      onStart(firstName, lastName, email, company, recaptchaValue || undefined)
+    } catch (error) {
+      console.error("Error starting game:", error)
+      setErrors((prev) => ({
+        ...prev,
+        general: error instanceof Error ? error.message : "Failed to start game",
+      }))
       setIsSubmitting(false)
     }
   }
@@ -236,6 +210,12 @@ export default function GameIntro({ onStart }: GameIntroProps) {
         </div>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-3">
+          {errors.general && (
+            <div className="p-3 bg-red-500/20 border border-red-500 rounded-md text-red-500 text-sm">
+              {errors.general}
+            </div>
+          )}
+
           <div>
             <label htmlFor="firstName" className="block text-sm font-medium mb-1">
               First Name:
@@ -313,14 +293,14 @@ export default function GameIntro({ onStart }: GameIntroProps) {
               {recaptchaLoaded && (
                 <ReCAPTCHA
                   ref={recaptchaRef}
-                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"}
+                  sitekey="6Lf5NzArAAAAAGfC_64WuD8WXLU9L1PQ12HXjwFZ"
                   onChange={handleRecaptchaChange}
                   theme="dark"
                 />
               )}
-              {errors.recaptcha && <p className="text-red-500 text-sm text-center mt-1">{errors.recaptcha}</p>}
             </div>
           )}
+          {errors.recaptcha && <p className="text-red-500 text-sm mt-1">{errors.recaptcha}</p>}
         </form>
       </CardContent>
       <CardFooter>

@@ -76,7 +76,7 @@ export default function GameContainer() {
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [company, setCompany] = useState("")
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null)
+  const [recaptchaToken, setRecaptchaToken] = useState<string | undefined>(undefined)
 
   const startGame = () => {
     setGameState("playing")
