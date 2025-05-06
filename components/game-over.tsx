@@ -39,7 +39,7 @@ export default function GameOver({ onTryAgain }: GameOverProps) {
           Try Again
         </Button>
         <a
-          href="https://alevdigital.com/contact"
+          href="https://alevdigital.com/contact-us/"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#cff564] hover:underline text-sm"

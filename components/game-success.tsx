@@ -37,7 +37,7 @@ export default function GameSuccess({ name, email, onPlayAgain }: GameSuccessPro
           Play Again
         </Button>
         <a
-          href="https://alevdigital.com/contact"
+          href="https://alevdigital.com/contact-us/"
           target="_blank"
           rel="noopener noreferrer"
           className="text-[#cff564] hover:underline text-sm"
