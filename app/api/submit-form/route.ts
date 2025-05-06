@@ -3,21 +3,28 @@ import nodemailer from "nodemailer"
 
 export async function POST(request: Request) {
   try {
-    const { name, email } = await request.json()
+    const data = await request.json()
+    const { firstName, lastName, email, company, score, correctOrder } = data
 
     // Log the submission
-    console.log("Form submission received:", { name, email, date: new Date().toISOString() })
+    console.log("Form submission received:", {
+      firstName,
+      lastName,
+      email,
+      company,
+      score,
+      correctOrder,
+      date: new Date().toISOString(),
+    })
 
     // Create a transporter with error handling
     let transporter
     try {
-      // For Gmail, you need to use an app password if 2FA is enabled
-      // or enable "Less secure app access" (not recommended)
       transporter = nodemailer.createTransport({
-        service: "gmail", // Using the gmail service preset
+        service: "gmail",
         auth: {
           user: process.env.EMAIL_FROM,
-          pass: process.env.SMTP_PASSWORD, // This should be an app password, not a client ID
+          pass: process.env.SMTP_PASSWORD,
         },
       })
     } catch (error) {
@@ -28,6 +35,8 @@ export async function POST(request: Request) {
     // Only attempt to send emails if transporter was created successfully
     if (transporter) {
       try {
+        const name = `${firstName} ${lastName}`
+
         // Email to the user
         await transporter.sendMail({
           from: process.env.EMAIL_FROM,
@@ -67,6 +76,8 @@ export async function POST(request: Request) {
               <h1 style="color: #333;">New Challenge Submission</h1>
               <p><strong>Name:</strong> ${name}</p>
               <p><strong>Email:</strong> ${email}</p>
+              <p><strong>Company:</strong> ${company}</p>
+              <p><strong>Score:</strong> ${score}</p>
               <p><strong>Date:</strong> ${new Date().toLocaleString()}</p>
             </div>
           `,
@@ -82,7 +93,7 @@ export async function POST(request: Request) {
     // Always return success to the user, even if email sending failed
     return NextResponse.json({
       success: true,
-      message: `Thank you ${name}! We'll contact you at ${email} soon.`,
+      message: `Thank you ${firstName}! We'll contact you at ${email} soon.`,
     })
   } catch (error) {
     console.error("Error processing submission:", error)
