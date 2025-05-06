@@ -76,6 +76,7 @@ export default function GameContainer() {
   const [firstName, setFirstName] = useState("")
   const [lastName, setLastName] = useState("")
   const [company, setCompany] = useState("")
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null)
 
   const startGame = () => {
     setGameState("playing")
@@ -85,13 +86,16 @@ export default function GameContainer() {
     setGameState("success")
   }, [])
 
-  const handleUserSubmit = (firstName: string, lastName: string, email: string, company: string) => {
+  const handleUserSubmit = (firstName: string, lastName: string, email: string, company: string, token?: string) => {
     // Store all user data for later use
     setFirstName(firstName)
     setLastName(lastName)
     setName(`${firstName} ${lastName}`)
     setEmail(email)
     setCompany(company)
+    if (token) {
+      setRecaptchaToken(token)
+    }
     startGame()
   }
 
@@ -113,11 +117,14 @@ export default function GameContainer() {
             company,
             score,
             correctOrder,
+            recaptchaToken, // Include the reCAPTCHA token if available
           }),
         })
 
         if (!response.ok) {
-          throw new Error("Failed to submit results")
+          const errorData = await response.json().catch(() => ({}))
+          console.error("Server response:", response.status, errorData)
+          throw new Error(`Failed to submit results: ${response.status}`)
         }
 
         // Show success screen
@@ -128,7 +135,7 @@ export default function GameContainer() {
         handleSuccess()
       }
     },
-    [firstName, lastName, email, company, handleSuccess],
+    [firstName, lastName, email, company, recaptchaToken, handleSuccess],
   )
 
   return (

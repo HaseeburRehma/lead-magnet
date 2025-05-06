@@ -2,6 +2,8 @@ export const runtime = 'nodejs'
 
 import { NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
+import disposableDomains from "disposable-email-domains"
+import dns from "dns/promises"
 
 export async function POST(request: Request) {
   try {
@@ -33,59 +35,72 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+    // Check for disposable email domains
+    const domain = email.split("@")[1]
+    if (disposableDomains.includes(domain)) {
+      return NextResponse.json(
+        { success: false, message: "Temporary or disposable email addresses are not allowed" },
+        { status: 400 },
+      )
+    }
 
-    // Verify reCAPTCHA if token is provided
-    if (recaptchaToken && process.env.RECAPTCHA_SECRET_KEY) {
+    // Verify MX records (only if not in development mode)
+    if (process.env.NODE_ENV === "production") {
+      try {
+        const mxRecords = await dns.resolveMx(domain)
+        if (!mxRecords || mxRecords.length === 0) {
+          return NextResponse.json({ success: false, message: "Email domain does not accept mail" }, { status: 400 })
+        }
+      } catch (err) {
+        console.error("MX lookup failed:", err)
+        // Continue even if MX lookup fails in production
+      }
+    }
+    // Verify reCAPTCHA if token is provided and not in development mode
+    if (recaptchaToken && process.env.RECAPTCHA_SECRET_KEY && process.env.NODE_ENV === "production") {
       try {
         const verifyRes = await fetch(
           `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${recaptchaToken}`,
-          { method: 'POST' }
+          { method: "POST" },
         )
         const verifyJson = await verifyRes.json()
         if (!verifyJson.success) {
-          return NextResponse.json(
-            { success: false, message: 'reCAPTCHA verification failed' },
-            { status: 400 }
-          )
+          return NextResponse.json({ success: false, message: "reCAPTCHA verification failed" }, { status: 400 })
         }
       } catch (err) {
-        console.error('reCAPTCHA verification error:', err)
-        // proceed even if verification request fails
+        console.error("reCAPTCHA verification error:", err)
+        // In production, we should fail if reCAPTCHA verification fails
+        if (process.env.NODE_ENV === "production") {
+          return NextResponse.json({ success: false, message: "Could not verify you are human" }, { status: 400 })
+        }
       }
     }
 
     // Only send emails on game submissions (when score is defined)
     if (score !== undefined) {
-      if (
-        process.env.SMTP_HOST &&
-        process.env.SMTP_PORT &&
-        process.env.SMTP_USER &&
-        process.env.SMTP_PASSWORD
-      ) {
+      if (process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
         // Determine secure and port
-        const secure = process.env.SMTP_SECURE === 'true'
-        const port = secure
-          ? 465
-          : parseInt(process.env.SMTP_PORT, 10) || 587
+        const secure = process.env.SMTP_SECURE === "true"
+        const port = secure ? 465 : Number.parseInt(process.env.SMTP_PORT, 10) || 587
 
         // Configure transporter
         const transporter = nodemailer.createTransport({
-          host: process.env.SMTP_HOST,           // smtp.gmail.com
-          port: 465,                             // SSL port
-          secure: true,                          // MUST be true for port 465
+          host: process.env.SMTP_HOST, // smtp.gmail.com
+          port: 465, // SSL port
+          secure: true, // MUST be true for port 465
           auth: {
             user: process.env.SMTP_USER,
-            pass: process.env.SMTP_PASSWORD      // your app password
+            pass: process.env.SMTP_PASSWORD, // your app password
           },
           tls: { rejectUnauthorized: false },
-        });
+        })
 
         // Verify connection
         try {
           await transporter.verify()
-          console.log('✅ SMTP verified: ready to send')
+          console.log("✅ SMTP verified: ready to send")
         } catch (verifyErr) {
-          console.error('❌ SMTP verify failed:', verifyErr)
+          console.error("❌ SMTP verify failed:", verifyErr)
         }
 
         // Send emails
@@ -94,7 +109,7 @@ export async function POST(request: Request) {
           await transporter.sendMail({
             from: `"Alev Digital" <${process.env.SMTP_USER}>`,
             to: email,
-            subject: 'Thank you for playing the Alev Digital Social Media Challenge',
+            subject: "Thank you for playing the Alev Digital Social Media Challenge",
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                 <h1 style="color: #333; text-align: center;">Thank You, ${fullName}!</h1>
@@ -133,21 +148,24 @@ export async function POST(request: Request) {
                 <p><strong>Company:</strong> ${company}</p>
                 <p><strong>Score:</strong> ${score}</p>
                 <p><strong>Submitted At:</strong> ${new Date().toLocaleString()}</p>
-                ${correctOrder
-                ? `<p><strong>Correct Order:</strong></p><ol>${correctOrder.map((item: string) => `<li>${item}</li>`).join('')}</ol>`
-                : ''}
+                ${
+                  correctOrder
+                    ? `<p><strong>Correct Order:</strong></p><ol>${correctOrder.map((item: string) => `<li>${item}</li>`).join("")}</ol>`
+                    : ""
+                }
               </div>
             `,
           })
 
-          console.log('📧 Game completion emails sent')
+          console.log("📧 Game completion emails sent")
         } catch (sendErr) {
-          console.error('Error sending emails:', sendErr)
+          console.error("Error sending emails:", sendErr)
         }
       } else {
-        console.warn('SMTP credentials missing; skipping email sending.')
+        console.warn("SMTP credentials missing; skipping email sending.")
       }
     }
+
 
     // Always return success
     return NextResponse.json({
