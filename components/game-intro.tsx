@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,14 +18,37 @@ export default function GameIntro({ onStart }: GameIntroProps) {
   const [company, setCompany] = useState("")
   const [errors, setErrors] = useState({ firstName: "", lastName: "", email: "", company: "", recaptcha: "" })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [recaptchaLoaded, setRecaptchaLoaded] = useState(true)
+  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false)
   const recaptchaRef = useRef<ReCAPTCHA>(null)
+
+  // Set recaptchaLoaded to true after component mounts
+  useEffect(() => {
+    setRecaptchaLoaded(true)
+  }, [])
 
   const handleRecaptchaChange = () => {
     setErrors((prev) => ({ ...prev, recaptcha: "" }))
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const verifyRecaptcha = async (token: string): Promise<boolean> => {
+    try {
+      const response = await fetch("/api/verify-recaptcha", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ token }),
+      })
+
+      const data = await response.json()
+      return data.success
+    } catch (error) {
+      console.error("Error verifying reCAPTCHA:", error)
+      return false
+    }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     const newErrors = { firstName: "", lastName: "", email: "", company: "", recaptcha: "" }
@@ -54,17 +77,33 @@ export default function GameIntro({ onStart }: GameIntroProps) {
       hasError = true
     }
 
-    // Uncomment for production use
-     const recaptchaValue = recaptchaRef.current?.getValue()
-     if (!recaptchaValue) {
-       newErrors.recaptcha = "Please complete the reCAPTCHA"
-       hasError = true
-     }
+    // Get reCAPTCHA token and verify
+    const recaptchaValue = recaptchaRef.current?.getValue()
+    if (!recaptchaValue) {
+      newErrors.recaptcha = "Please complete the reCAPTCHA"
+      hasError = true
+    }
 
     setErrors(newErrors)
 
     if (!hasError) {
       setIsSubmitting(true)
+
+      // Verify reCAPTCHA with our API route
+      if (recaptchaValue) {
+        const isVerified = await verifyRecaptcha(recaptchaValue)
+
+        if (!isVerified) {
+          setErrors((prev) => ({
+            ...prev,
+            recaptcha: "reCAPTCHA verification failed. Please try again.",
+          }))
+          setIsSubmitting(false)
+          return
+        }
+      }
+
+      // If we get here, reCAPTCHA is verified
       onStart(firstName, lastName, email, company)
     }
   }
@@ -187,15 +226,14 @@ export default function GameIntro({ onStart }: GameIntroProps) {
             {errors.company && <p className="text-red-500 text-sm mt-1">{errors.company}</p>}
           </div>
 
-          {/* Commented out reCAPTCHA as requested */}
-
-          <div className="mt-4 flex justify-start">
+          <div className="mt-4 flex justify-center w-full overflow-hidden">
             {recaptchaLoaded && (
               <ReCAPTCHA
                 ref={recaptchaRef}
                 sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" // Replace with your actual site key in production
                 onChange={handleRecaptchaChange}
                 theme="dark"
+                size="normal"
               />
             )}
           </div>
