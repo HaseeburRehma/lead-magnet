@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://ssm.alevdigital.com/sitemap.xml
+Sitemap: https://smm.alevdigital.com/sitemap.xml

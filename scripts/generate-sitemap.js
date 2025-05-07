@@ -2,7 +2,7 @@ const fs = require("fs")
 const path = require("path")
 
 // Configure your domain
-const domain = "https://ssm.alevdigital.com"
+const domain = "https://smm.alevdigital.com"
 const currentDate = new Date().toISOString().split("T")[0]
 
 // Define your routes

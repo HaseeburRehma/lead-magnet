@@ -8,7 +8,7 @@ import type { Metadata } from "next"
 const inter = Inter({ subsets: ["latin"] })
 
 // Define base URL for canonical links
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://ssm.alevdigital.com"
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://smm.alevdigital.com"
 
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
