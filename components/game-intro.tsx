@@ -293,7 +293,7 @@ export default function GameIntro({ onStart }: GameIntroProps) {
               {recaptchaLoaded && (
                 <ReCAPTCHA
                   ref={recaptchaRef}
-                  sitekey="6LcgaTErAAAAAPPOFfKaUg4TtRcPrFxH8c9wfzxB"
+                  sitekey="6LeDbTErAAAAAKE2uYOhhmEi76y-XXH1XH6L7lm3"
                   onChange={handleRecaptchaChange}
                   theme="dark"
                 />
