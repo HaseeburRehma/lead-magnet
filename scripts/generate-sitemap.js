@@ -1,7 +1,7 @@
 const fs = require("fs")
 const path = require("path")
 
-// Configure your domain
+// Configure your domain with protocol
 const domain = "https://smm.alevdigital.com"
 const currentDate = new Date().toISOString().split("T")[0]
 

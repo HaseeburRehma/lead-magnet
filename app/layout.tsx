@@ -7,11 +7,13 @@ import type { Metadata } from "next"
 
 const inter = Inter({ subsets: ["latin"] })
 
-// Define base URL for canonical links
+// Define base URL for canonical links - ensure it has a protocol
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://smm.alevdigital.com"
+// Make sure the URL has a protocol
+const fullBaseUrl = baseUrl.startsWith("http") ? baseUrl : `https://${baseUrl}`
 
 export const metadata: Metadata = {
-  metadataBase: new URL(baseUrl),
+  metadataBase: new URL(fullBaseUrl),
   title: "Social Media Marketing Skills Challenge | Alev Digital",
   description:
     "Test your social media marketing knowledge with our interactive challenge. Arrange posts in the optimal sequence and see if you think like a professional social media strategist.",
@@ -38,14 +40,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: baseUrl,
+    url: fullBaseUrl,
     title: "Social Media Marketing Skills Challenge | Alev Digital",
     description:
       "Test your social media marketing knowledge with our interactive challenge. Arrange posts in the optimal sequence and see if you think like a professional social media strategist.",
     siteName: "Alev Digital",
     images: [
       {
-        url: `${baseUrl}/images/alev-logo.png`,
+        url: `${fullBaseUrl}/images/alev-logo.png`,
         width: 1200,
         height: 630,
         alt: "Alev Digital Social Media Challenge",
@@ -57,11 +59,11 @@ export const metadata: Metadata = {
     title: "Social Media Marketing Skills Challenge | Alev Digital",
     description:
       "Test your social media marketing knowledge with our interactive challenge. Arrange posts in the optimal sequence and see if you think like a professional social media strategist.",
-    images: [`${baseUrl}/images/alev-logo.png`],
+    images: [`${fullBaseUrl}/images/alev-logo.png`],
     creator: "@alevdigital",
   },
   alternates: {
-    canonical: baseUrl,
+    canonical: fullBaseUrl,
   },
 }
 
@@ -73,7 +75,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <link rel="canonical" href={baseUrl} />
+        <link rel="canonical" href={fullBaseUrl} />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="apple-touch-icon" href="/apple-icon.png" />
         <meta name="theme-color" content="#000000" />
@@ -100,7 +102,7 @@ export default function RootLayout({
                 name: "Alev Digital",
                 logo: {
                   "@type": "ImageObject",
-                  url: `${baseUrl}/images/alev-logo.png`,
+                  url: `${fullBaseUrl}/images/alev-logo.png`,
                 },
               },
             }),

@@ -1,11 +1,6 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 
-export const metadata = {
-  title: "Page Not Found | Alev Digital",
-  description: "The page you're looking for doesn't exist. Return to the Social Media Marketing Challenge.",
-}
-
 export default function NotFound() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-4">
