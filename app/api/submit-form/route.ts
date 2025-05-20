@@ -1,82 +1,41 @@
-// app/api/submit-form/route.ts
-import { NextRequest, NextResponse } from "next/server"
-import nodemailer from "nodemailer"
-
 export const runtime = "nodejs"
 
-export async function POST(request: NextRequest) {
+import { NextResponse } from "next/server"
+import nodemailer from "nodemailer"
+
+export async function POST(request: Request) {
   try {
-    // 1) PARSE
+    // Parse and log submission
     const body = await request.json()
-    const { recaptchaToken, firstName, lastName, email, company, score, correctOrder } = body
+    const { firstName, lastName, email, company, score, correctOrder, recaptchaToken } = body
+    const fullName = `${firstName} ${lastName}`
 
-    // 2) TOKEN PRESENCE CHECK
-    if (!recaptchaToken) {
-      return NextResponse.json(
-        { success: false, message: "reCAPTCHA token missing" },
-        { status: 400 }
-      )
-    }
-
-    // 3) VERIFY HUMANITY
-    const origin = new URL(request.url).origin
-    const verifyResp = await fetch(`${origin}/api/verify-recaptcha`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: recaptchaToken }),
-    })
-
-    // network or 5xx from verify endpoint
-    if (!verifyResp.ok) {
-      console.error("reCAPTCHA verify endpoint error:", verifyResp.status, verifyResp.statusText)
-      return NextResponse.json(
-        { success: false, message: "Error contacting reCAPTCHA service" },
-        { status: 500 }
-      )
-    }
-
-    const verifyData = await verifyResp.json()
-    if (!verifyData.success) {
-      return NextResponse.json(
-        { success: false, message: verifyData.message || "reCAPTCHA validation failed" },
-        { status: 400 }
-      )
-    }
-
-    // 4) LOG + BASIC FIELD VALIDATION
-    const fullName = `${firstName || ""} ${lastName || ""}`.trim()
     console.log("Form submission received:", {
       name: fullName,
       email,
       date: new Date().toISOString(),
       isGameSubmission: score !== undefined,
-      hasRecaptchaToken: true,
+      hasRecaptchaToken: !!recaptchaToken,
     })
 
+    // Validate required fields
     if (!firstName || !lastName || !email || !company) {
-      return NextResponse.json(
-        { success: false, message: "All fields are required" },
-        { status: 400 }
-      )
-    }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      return NextResponse.json(
-        { success: false, message: "Invalid email format" },
-        { status: 400 }
-      )
+      return NextResponse.json({ success: false, message: "All fields are required" }, { status: 400 })
     }
 
-    // 5) ONLY SEND EMAILS IF GAME PLAYED
-    if (typeof score === "number") {
-      if (
-        process.env.SMTP_HOST &&
-        process.env.SMTP_USER &&
-        process.env.SMTP_PASSWORD
-      ) {
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return NextResponse.json({ success: false, message: "Invalid email format" }, { status: 400 })
+    }
+
+    // Only send emails on game submissions (when score is defined)
+    if (score !== undefined) {
+      if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASSWORD) {
+        // Configure transporter
         const transporter = nodemailer.createTransport({
           host: process.env.SMTP_HOST,
-          port: process.env.SMTP_SECURE === "true" ? 465 : Number(process.env.SMTP_PORT) || 587,
+          port: process.env.SMTP_SECURE === "true" ? 465 : 587,
           secure: process.env.SMTP_SECURE === "true",
           auth: {
             user: process.env.SMTP_USER,
@@ -138,10 +97,11 @@ export async function POST(request: NextRequest) {
                 <p><strong>Company:</strong> ${company}</p>
                 <p><strong>Score:</strong> ${score}</p>
                 <p><strong>Submitted At:</strong> ${new Date().toLocaleString()}</p>
-                ${correctOrder
-                ? `<p><strong>Correct Order:</strong></p><ol>${correctOrder.map((item: string) => `<li>${item}</li>`).join("")}</ol>`
-                : ""
-              }
+                ${
+                  correctOrder
+                    ? `<p><strong>Correct Order:</strong></p><ol>${correctOrder.map((item: string) => `<li>${item}</li>`).join("")}</ol>`
+                    : ""
+                }
               </div>
             `,
           })
