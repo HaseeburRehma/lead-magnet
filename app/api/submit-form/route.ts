@@ -6,10 +6,26 @@ import nodemailer from "nodemailer"
 export async function POST(request: Request) {
   try {
     // Parse and log submission
+
     const body = await request.json()
     const { firstName, lastName, email, company, score, correctOrder, recaptchaToken } = body
     const fullName = `${firstName} ${lastName}`
-
+    // 1) verify human
+    const verifyResp = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/verify-recaptcha`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: recaptchaToken })
+      }
+    )
+    const verifyData = await verifyResp.json()
+    if (!verifyData.success) {
+      return NextResponse.json(
+        { success: false, message: verifyData.message },
+        { status: 400 }
+      )
+    }
     console.log("Form submission received:", {
       name: fullName,
       email,
@@ -97,11 +113,10 @@ export async function POST(request: Request) {
                 <p><strong>Company:</strong> ${company}</p>
                 <p><strong>Score:</strong> ${score}</p>
                 <p><strong>Submitted At:</strong> ${new Date().toLocaleString()}</p>
-                ${
-                  correctOrder
-                    ? `<p><strong>Correct Order:</strong></p><ol>${correctOrder.map((item: string) => `<li>${item}</li>`).join("")}</ol>`
-                    : ""
-                }
+                ${correctOrder
+                ? `<p><strong>Correct Order:</strong></p><ol>${correctOrder.map((item: string) => `<li>${item}</li>`).join("")}</ol>`
+                : ""
+              }
               </div>
             `,
           })

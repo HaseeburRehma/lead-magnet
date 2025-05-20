@@ -66,7 +66,8 @@ export default function GameIntro({ onStart }: GameIntroProps) {
     // Ensure reCAPTCHA script is loaded
     if (!document.querySelector('script[src*="recaptcha"]')) {
       const script = document.createElement("script")
-      script.src = "https://www.google.com/recaptcha/api.js"
+      script.src = `https://www.google.com/recaptcha/api.js?render=${process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}`
+
       script.async = true
       script.defer = true
       document.head.appendChild(script)
@@ -292,8 +293,8 @@ export default function GameIntro({ onStart }: GameIntroProps) {
             <div className="mt-4 flex justify-start">
               {recaptchaLoaded && (
                 <ReCAPTCHA
-                  ref={recaptchaRef}
-                  sitekey="6LeDbTErAAAAAKE2uYOhhmEi76y-XXH1XH6L7lm3"
+
+                  sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
                   onChange={handleRecaptchaChange}
                   theme="dark"
                 />
